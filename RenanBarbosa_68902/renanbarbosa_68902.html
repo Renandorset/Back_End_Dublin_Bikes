@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cycle Hub</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: 'Arial', sans-serif;
+      color: #333;
+      margin: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0084b4;
+      margin-bottom: 25px;
+      font-size: 24px;
+    }
+
+    #list-stations {
+      max-width: 700px;
+      margin: auto;
+    }
+
+    .station {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+    }
+
+    .station:hover {
+      background-color: #ecf5fd;
+      transform: scale(1.02);
+    }
+
+    #search-station {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      margin-bottom: 25px;
+    }
+
+    #search-station:focus {
+      border-color: #0084b4;
+      background-color: #e6f0fa;
+      outline: none;
+    }
+
+    #overlay, #info-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #info-modal {
+      width: 80%;
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      transform: translateY(50%);
+    }
+
+    #info-modal h2 {
+      color: #0084b4;
+      font-size: 20px;
+    }
+
+    #close-btn {
+      padding: 10px 20px;
+      background-color: #0074a2;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      float: right;
+    }
+
+    #close-btn:hover {
+      background-color: #005f8a;
+    }
+
+    #station-details {
+      color: #666;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cycle Station Directory</h1>
+  <input type="text" id="search-station" placeholder="Filter by name...">
+  <div id="list-stations"></div>
+
+  <div id="overlay"></div>
+  <div id="info-modal">
+    <button id="close-btn">Close</button>
+    <h2>Details</h2>
+    <div id="station-details">Select a station to view more information.</div>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      // Function to handle and display the station data
+      const handleData = (stations) => {
+        const showStations = (stationsToShow) => {
+          $('#list-stations').empty();
+          stationsToShow.forEach((station) => {
+            $('#list-stations').append(
+              `<div class="station" data-id="${station.number}">
+                ${station.name}
+              </div>`
+            );
+          });
+  
+          $('.station').on('click', function () {
+            const stationId = $(this).data('id');
+            const station = stations.find(s => s.number === stationId);
+            if (station) {
+              $('#station-details').html(`
+                <strong>Name:</strong> ${station.name}<br>
+                <strong>Address:</strong> ${station.address}<br>
+                <strong>Bikes Available:</strong> ${station.available_bikes}<br>
+                <strong>Docks Available:</strong> ${station.available_bike_stands}<br>
+                <strong>Status:</strong> ${station.status}<br>
+                <strong>Last Updated:</strong> ${new Date(station.last_update).toLocaleString()}
+              `);
+              $('#overlay, #info-modal').show();
+            }
+          });
+        };
+  
+        $('#close-btn, #overlay').on('click', function () {
+          $('#overlay, #info-modal').hide();
+        });
+  
+        $('#search-station').on('input', function () {
+          const searchValue = $(this).val().toLowerCase();
+          const filteredStations = stations.filter(station =>
+            station.name.toLowerCase().includes(searchValue)
+          );
+          showStations(filteredStations);
+        });
+  
+        showStations(stations);
+      };
+  
+      // Fetch the station data from the JSON file
+      $.getJSON('dublinbike.json', handleData).fail(function() {
+        console.error("Error fetching station data.");
+      });
+    });
+  </script>  
+</body>
+</html>
